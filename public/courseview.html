@@ -1,0 +1,663 @@
+
+
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>কোর্স ডিটেইলস - Polytechnic Express</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+      color: #212529;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .course-video-wrapper {
+      position: relative;
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+      margin-bottom: 1rem;
+      background: #000;
+    }
+    .plyr__video-embed iframe {
+      pointer-events: none;
+    }
+    .tab-btns .nav-link {
+      white-space: nowrap;
+    }
+    .chapter-item {
+      cursor: pointer;
+    }
+    .chapter-item:hover {
+      background-color: #e9ecef;
+    }
+    .mentor-card {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .mentor-card img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .tab-content-box {
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .skip-btn {
+      pointer-events: auto;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0,0,0,0.5);
+      border: none;
+      color: white;
+      font-size: 1rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: background-color 0.3s ease;
+      z-index: 10;
+    }
+    .skip-btn:hover {
+      background-color: rgba(0,0,0,0.8);
+    }
+    .skip-left { left: 10px; }
+    .skip-right { right: 10px; }
+.chapter-name-display {
+  margin-top: 5px;
+  text-align: center;
+  color: #060505;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+@media (max-width: 767.98px) {
+  .tab-content-wrapper {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+}
+@media (min-width: 768px) {
+  .tab-content-wrapper {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+ #previewModalBody iframe,
+  #previewModalBody img {
+    width: 100%;
+    height: 80vh;
+    object-fit: contain;
+    border: none;
+  }
+  .locked {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="#">🎓 Polytechnic Express</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav" id="nav-links">
+        <li class="nav-item"><a class="nav-link active" href="#">হোম</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">কোর্সসমূহ</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">যোগাযোগ</a></li>
+        <!-- এখানে JS দিয়ে লগইন বা প্রোফাইল যুক্ত হবে -->
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+  <div class="container my-5">
+    <div id="course-details">
+      <div class="text-center py-5" id="loadingSpinner">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3">লোড হচ্ছে...</p>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal for PDF/Image preview -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalLabel">প্রিভিউ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center" id="previewModalBody">
+        <!-- Dynamic content will load here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+  <footer class="bg-dark text-white text-center py-4 mt-5">
+    <div class="container">
+      <p>© ২০২৫ Polytechnic Express | সকল অধিকার সংরক্ষিত</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const courseId = urlParams.get('courseId');
+
+  async function loadCourseDetails() {
+    try {
+      const res = await fetch(`/api/courses/byCourseId/${courseId}`);
+      if (!res.ok) throw new Error("কোর্স পাওয়া যায়নি");
+      const course = await res.json();
+
+      const mentorHtml = (course.mentors && course.mentors.length > 0)
+        ? course.mentors.map(m => `
+          <div class="mentor-card mb-3">
+            <img src="${m.photo || 'https://via.placeholder.com/80'}" alt="Mentor Photo" />
+            <div>
+              <h5>${m.name}</h5>
+              <p class="mb-1">${m.designation || ''}</p>
+              <small>${m.bio || ''}</small>
+            </div>
+          </div>
+        `).join('')
+        : `<p>মেন্টর তথ্য পাওয়া যায়নি।</p>`;
+
+      let subjectsHtml = "";
+      if (Array.isArray(course.subjects) && course.subjects.length) {
+subjectsHtml = course.subjects.map((subject, i) => {
+
+  const chaptersList = subject.chapters.map(chapter => {
+
+    // Image HTML (যদি থাকে)
+// Image HTML (যদি থাকে)
+const imagesHtml = (chapter.image && chapter.image.length > 0)
+  ? `<div class="mt-1 d-flex align-items-center flex-wrap gap-2">
+      <strong>ছবি:</strong>
+      ${chapter.image.map(img => `
+        <a href="javascript:void(0)" 
+           onclick="openPreview('image', '${img.url}', '${img.title}')" 
+           class="text-decoration-underline me-2">
+          ${img.title}
+        </a>
+      `).join('')}
+    </div>`
+  : '';
+
+
+
+
+    // PDF HTML (যদি থাকে)
+const pdfsHtml = (chapter.pdf && chapter.pdf.length > 0)
+  ? `<div class="mt-1">
+      <strong>PDF:</strong>
+      ${chapter.pdf.map(pdf => `
+        <a href="javascript:void(0)" onclick="openPreview('pdf', '${pdf.url}', '${pdf.title}')" class="me-2 text-decoration-underline">${pdf.title}</a>
+      `).join('')}
+    </div>`
+  : '';
+
+
+    // Chapter List Item with video, images, pdf
+    return `
+      <li 
+        class="list-group-item chapter-item" 
+        data-video-id="${chapter.videoId}" 
+        data-subject-name="${subject.subjectName}" 
+        role="button" tabindex="0"
+      >
+        🎬 ${chapter.name}
+        ${imagesHtml}
+        ${pdfsHtml}
+      </li>
+    `;
+  }).join("");
+
+  return `
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="heading${i}">
+        <button class="accordion-button ${i !== 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}" aria-expanded="${i === 0}" aria-controls="collapse${i}">
+          ${subject.subjectName}
+        </button>
+      </h2>
+      <div id="collapse${i}" class="accordion-collapse collapse ${i === 0 ? 'show' : ''}" aria-labelledby="heading${i}" data-bs-parent="#courseAccordion">
+        <div class="accordion-body p-0"> 
+          <ul class="list-group list-group-flush">
+            ${chaptersList} 
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}).join("");
+
+      } else {
+        subjectsHtml = "<p>কোনো বিষয় পাওয়া যায়নি।</p>";
+      }
+
+      document.getElementById('course-details').innerHTML = `
+        <div class="row mb-4 bg-light rounded shadow-sm border">
+          <div class="col-md-8">
+            <div class="course-video-wrapper position-relative" id="videoWrapper">
+              <div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${course.introVideoId}"></div>
+              <button class="skip-btn skip-left" aria-label="পেছনে ১০ সেকেন্ড">&lt;</button>
+              <button class="skip-btn skip-right" aria-label="সামনে ১০ সেকেন্ড">&gt;</button>
+            </div>
+          </div>
+          <div class="col-md-4 d-flex flex-column justify-content-between bg-white p-4 rounded shadow-sm">
+            <h2>${course.title}</h2>
+
+            <div class="mb-2">
+              <input type="text" id="promoInput" class="form-control mb-2" placeholder="প্রোমো কোড দিন" />
+              <div id="promoMsg" class="mt-2 text-success" style="display:none;"></div>
+              <button class="btn btn-outline-primary w-100" id="applyPromoBtn">প্রয়োগ করুন</button>
+              
+            </div>
+
+
+            <!-- কোর্সটি কিনুন বাটন -->
+<button class="btn buy-button btn-success btn-lg w-100 mb-2" onclick="handleBuyNow()">কোর্সটি কিনুন</button>
+
+<!-- বাটনের নিচে পেমেন্ট ইনপুট -->
+<div id="buyNowSection" style="display:none;" class="mt-3">
+
+
+<select id="paymentMethod" class="form-select mb-2" onchange="showPaymentNumber()">
+  <option value="">পেমেন্ট মাধ্যম নির্বাচন করুন</option>
+  <option value="bkash">বিকাশ</option>
+  <option value="nagad">নগদ</option>
+</select>
+
+<div id="sendToNumber" class="alert alert-info text-center d-none"></div>
+
+
+  <input type="text" id="paymentPhone" class="form-control mb-2" placeholder="মোবাইল নম্বর" />
+  <input type="text" id="transactionId" class="form-control mb-2" placeholder="লেনদেন নম্বর (Transaction ID)" />
+
+  <button onclick="submitPayment()" class="btn btn-primary w-100">নিশ্চিত করুন</button>
+
+    <div id="buyNowMessage" class="mb-2 text-danger text-center"></div>
+</div>
+
+            
+            <div class="d-flex justify-content-center" ><strong>মূল্য: </strong><span id="coursePrice">${course.price ? course.price + " টাকা" : "ফ্রি"}</span></div>
+
+          </div>
+        </div>
+
+        <div id="chapterNameDisplay" class="chapter-name-display" style="display: none;"></div>
+
+        <div class="tab-content-wrapper mt-4">
+          <div class="tab-content-box p-4 bg-white border rounded shadow-sm">
+            <ul class="nav nav-pills justify-content-center flex-wrap gap-2 tab-btns mb-4" id="courseTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="content-tab" data-bs-toggle="pill" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="true">📚 কোর্স কন্টেন্ট</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="description-tab" data-bs-toggle="pill" data-bs-target="#description" type="button" role="tab" aria-controls="description" aria-selected="false">📝 কোর্স বিবরণ</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="mentor-tab" data-bs-toggle="pill" data-bs-target="#mentor" type="button" role="tab" aria-controls="mentor" aria-selected="false">👨‍🏫 মেন্টর</button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="courseTabContent">
+              <div class="tab-pane fade show active" id="content" role="tabpanel" aria-labelledby="content-tab">
+                <div class="accordion" id="courseAccordion">${subjectsHtml}</div>
+              </div>
+              <div class="tab-pane fade" id="description" role="tabpanel" aria-labelledby="description-tab">
+                <div class="p-3 border rounded">
+                  <h4>কোর্স বিবরণ</h4>
+                  <img src="${course.thumbnail || 'https://via.placeholder.com/400x225?text=No+Thumbnail'}" alt="কোর্স থাম্বনেইল" class="img-fluid mb-3 rounded" />
+                  <p>${course.fullDescription?.replace(/\n/g, "<br>") || "কোনো বিবরণ নেই।"}</p>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="mentor" role="tabpanel" aria-labelledby="mentor-tab">
+                ${mentorHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      
+      const player = new Plyr('#player', {
+        youtube: {
+          noCookie: true,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0
+        }
+      });
+    
+
+      document.querySelector('.skip-left').addEventListener('click', () => {
+        player.currentTime = Math.max(player.currentTime - 10, 0);
+      });
+      document.querySelector('.skip-right').addEventListener('click', () => {
+        player.currentTime = Math.min(player.currentTime + 10, player.duration);
+      });
+
+      const chapterNameDisplay = document.getElementById('chapterNameDisplay');
+
+      // localStorage থেকে লাস্ট প্লে করা ভিডিও দেখাও যদি থাকে
+      const savedVideoInfo = localStorage.getItem('lastPlayedVideo');
+      if (savedVideoInfo) {
+        chapterNameDisplay.textContent = savedVideoInfo;
+        chapterNameDisplay.style.display = 'inline-block';
+      } else {
+        chapterNameDisplay.style.display = 'none';
+      }
+
+      // নতুন ভিডিও সিলেক্ট করলে প্লে করো ও localStorage আপডেট করো
+      document.querySelectorAll('.chapter-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const videoId = item.getAttribute('data-video-id');
+          const subjectName = item.getAttribute('data-subject-name');
+          const chapterName = item.textContent.trim();
+
+          if (videoId) {
+            player.source = {
+              type: 'video',
+              sources: [{ src: videoId, provider: 'youtube' }]
+            };
+            player.play();
+
+            const displayText = `ভিডিও: ${subjectName} - ${chapterName}`;
+            chapterNameDisplay.textContent = displayText;
+            chapterNameDisplay.style.display = 'inline-block';
+
+            // localStorage-এ সেই তথ্য সংরক্ষণ
+            localStorage.setItem('lastPlayedVideo', displayText);
+          }
+        });
+      });
+
+      const applyBtn = document.getElementById('applyPromoBtn');
+      const promoMsg = document.getElementById('promoMsg');
+      const priceDisplay = document.getElementById('coursePrice');
+      const promoInput = document.getElementById('promoInput');
+
+
+applyBtn.addEventListener('click', () => {
+  const inputCode = promoInput.value.trim();
+  if (!inputCode) return;
+
+  if (inputCode === course.promoCode) {
+    const discountedPrice = Math.max(course.price - course.promoDiscount, 0);
+    priceDisplay.textContent = `${discountedPrice} টাকা`;
+    promoMsg.textContent = `প্রোমো কোড প্রযোজ্য হয়েছে! আপনি ${course.promoDiscount} টাকা ছাড় পাচ্ছেন।`;
+    promoMsg.style.display = 'block';
+    promoMsg.classList.remove('text-danger');
+    promoMsg.classList.add('text-success');
+  } else {
+    promoMsg.textContent = `ভুল প্রোমো কোড! আবার চেষ্টা করুন।`;
+    promoMsg.style.display = 'block';
+    promoMsg.classList.remove('text-success');
+    promoMsg.classList.add('text-danger');
+  }
+});
+
+
+
+
+    } catch (err) {
+      document.getElementById('course-details').innerHTML = `
+        <div class="alert alert-danger text-center" role="alert">
+          ডেটা লোড করতে সমস্যা হয়েছে। ${err.message}
+        </div>
+      `;
+    }
+  }
+  
+  async function initPage() {
+    await loadCourseDetails(); // এই ফাংশনকেও async করতে হবে
+    await updateCourseAccessUI();
+  }
+
+  initPage(); // এখন কল করো
+</script>
+<script>
+  // Open preview in modal
+  function openPreview(type, url, title = "") {
+    const modalBody = document.getElementById("previewModalBody");
+    const modalTitle = document.getElementById("previewModalLabel");
+    modalTitle.textContent = title || "প্রিভিউ";
+
+    if (type === "pdf") {
+      modalBody.innerHTML = `<iframe src="${url}" type="application/pdf"></iframe>`;
+    } else if (type === "image") {
+      modalBody.innerHTML = `<img src="${url}" alt="${title}" />`;
+    }
+
+    const previewModal = new bootstrap.Modal(document.getElementById("previewModal"));
+    previewModal.show();
+  }
+</script>
+<script>
+  // ইউজার লগইন চেক (উদাহরণস্বরূপ)
+  const isLoggedIn = localStorage.getItem('loggedIn') === 'true';
+  const navLinks = document.getElementById('nav-links');
+
+  if (isLoggedIn) {
+    // প্রোফাইল ড্রপডাউন দেখানো
+    navLinks.innerHTML += `
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png" width="24" alt="প্রোফাইল">
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="profile.html">প্রোফাইল</a></li>
+          <li><a class="dropdown-item" href="#" onclick="logout()">লগআউট</a></li>
+        </ul>
+      </li>
+    `;
+  } else {
+    // লগইন বাটন দেখানো
+    navLinks.innerHTML += `
+      <li class="nav-item"><a class="nav-link" href="login.html">লগইন</a></li>
+    `;
+  }
+
+function logout() {
+  // সব লোকালস্টোরেজ ডাটা মুছে ফেলুন যেগুলো auth এর সাথে জড়িত
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('loggedIn');
+
+  // প্রয়োজন হলে sessionStorage-ও clear করুন
+  sessionStorage.clear();
+
+  // ইউজারকে হোমপেজ বা login পেইজে নিয়ে যান
+  window.location.href = '/login.html'; // অথবা window.location.reload();
+}
+
+
+
+</script>
+<script>
+function handleBuyNow() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  const messageEl = document.getElementById('buyNowMessage');
+  const sectionEl = document.getElementById('buyNowSection');
+
+  if (!user) {
+    alert("আপনাকে লগইন করতে হবে।");
+    sectionEl.style.display = 'none';
+    return;
+  }
+
+  messageEl.textContent = "";
+
+  // Toggle করে দেখাবে বা লুকাবে
+  if (sectionEl.style.display === 'none' || sectionEl.style.display === '') {
+    sectionEl.style.display = 'block';
+  } else {
+    sectionEl.style.display = 'none';
+  }
+}
+
+
+  async function submitPayment() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const paymentPhone = document.getElementById('paymentPhone').value.trim();
+    const transactionId = document.getElementById('transactionId').value.trim();
+    const messageEl = document.getElementById('buyNowMessage');
+
+    if (!paymentMethod || !paymentPhone || !transactionId) {
+      messageEl.textContent = "সকল তথ্য সঠিকভাবে দিন।";
+      return;
+    }
+    if (paymentPhone.length !== 11 || !/^01[0-9]{9}$/.test(paymentPhone)) {
+  messageEl.textContent = "সঠিক ১১-সংখ্যার মোবাইল নম্বর দিন (যেমনঃ 01XXXXXXXXX)";
+  return;
+}
+
+    const payload = {
+      name: user?.name,
+      phone: user?.phone,
+      email: user?.email || '',
+      courseId: urlParams.get('courseId'),
+      paymentMethod,
+      paymentPhone,
+      transactionId
+    };
+
+    try {
+      const res = await fetch('/api/payments/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        messageEl.classList.remove('text-danger');
+        messageEl.classList.add('text-success');
+        alert("পেমেন্ট সফলভাবে জমা হয়েছে। যাচাই করা হচ্ছে...");
+        document.getElementById('buyNowSection').style.display = 'none';
+      } else {
+        throw new Error(data.error || "পেমেন্ট ব্যর্থ হয়েছে");
+      }
+    } catch (err) {
+      messageEl.classList.remove('text-success');
+      messageEl.classList.add('text-danger');
+      messageEl.textContent = err.message;
+    }
+  }
+  function showPaymentNumber() {
+  const method = document.getElementById('paymentMethod').value;
+  const sendTo = document.getElementById('sendToNumber');
+
+  if (method === 'bkash') {
+    sendTo.textContent = 'বিকাশ নম্বরে Send Money করুন: 01XXXXXXXXX';
+    sendTo.classList.remove('d-none');
+  } else if (method === 'nagad') {
+    sendTo.textContent = 'নগদ নম্বরে Send Money করুন: 01YYYYYYYYY';
+    sendTo.classList.remove('d-none');
+  } else {
+    sendTo.classList.add('d-none');
+    sendTo.textContent = '';
+  }
+}
+
+
+
+
+
+
+</script>
+<script>
+  function lockAllVideos() {
+    document.querySelectorAll('.chapter-item').forEach(item => {
+      item.classList.add('locked');
+    });
+  }
+
+  function unlockAllVideos() {
+    document.querySelectorAll('.chapter-item').forEach(item => {
+      item.classList.remove('locked');
+    });
+  }
+
+  async function updateCourseAccessUI() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const buyBtn = document.querySelector('.buy-button');
+
+    if (!user) {
+      buyBtn.textContent = "কোর্সটি কিনুন";
+      lockAllVideos();
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/payments/all');
+      const payments = await res.json();
+
+      const matched = payments.find(p =>
+        p.phone === user.phone &&
+        p.courseId === courseId &&
+        p.status === 'approved'
+      );
+
+      if (matched) {
+        buyBtn.textContent = "কোর্সটি শুরু করুন";
+        buyBtn.removeAttribute('onclick');
+        document.getElementById('promoInput').style.display = 'none';
+        document.getElementById('applyPromoBtn').style.display = 'none';
+        unlockAllVideos();
+      } else {
+        buyBtn.textContent = "কোর্সটি কিনুন";
+        lockAllVideos();
+      }
+    } catch (err) {
+      console.error("পেমেন্ট যাচাই করতে সমস্যা হয়েছে:", err);
+      buyBtn.textContent = "কোর্সটি কিনুন";
+      lockAllVideos();
+    }
+  }
+</script>
+
+
+</body>
+</html>
+
+
+

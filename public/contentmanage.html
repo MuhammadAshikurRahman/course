@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>কোর্স ম্যানেজমেন্ট</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .sub-section { border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 5px; }
+    hr { margin-top: 1rem; margin-bottom: 1rem; }
+  </style>
+</head>
+
+<body class="container py-4">
+  <h2 class="mb-4">🎓 নতুন কোর্স যোগ করুন</h2>
+
+  <!-- Course List -->
+  <h4 class="mb-3">📋 কোর্স লিস্ট</h4>
+  <div id="courseList" class="mb-4 row gy-3"></div>
+
+  <!-- Form -->
+  <form id="courseForm">
+    <input class="form-control mb-2" name="courseId" placeholder="Course ID" required />
+    <input class="form-control mb-2" name="title" placeholder="Course Title" required />
+    <input class="form-control mb-2" name="thumbnail" placeholder="Thumbnail URL" required />
+    <input class="form-control mb-2" name="shortDescription" placeholder="Short Description" required />
+    <textarea class="form-control mb-2" name="fullDescription" placeholder="Full Description" rows="3" required></textarea>
+    <input class="form-control mb-2" name="introVideoId" placeholder="Intro Video ID" required />
+
+    <div id="mentorsContainer" class="mb-3">
+      <label class="form-label">মেন্টরের নাম</label>
+      <div class="input-group mb-2">
+        <input type="text" class="form-control" name="mentor" required />
+        <button type="button" class="btn btn-secondary" onclick="addMentor()">➕ আরও মেন্টর</button>
+      </div>
+    </div>
+
+    <div id="subjectsContainer">
+      <h5 class="mt-4">📚 বিষয়সমূহ</h5>
+    </div>
+    <button type="button" class="btn btn-secondary mb-3" onclick="addSubject()">➕ নতুন বিষয়</button>
+
+    <input type="number" class="form-control mb-2" name="price" placeholder="Price" required />
+    <input class="form-control mb-2" name="promoCode" placeholder="Promo Code (optional)" />
+    <input type="number" class="form-control mb-2" name="promoDiscount" placeholder="Discount Amount (optional)" />
+
+    <button class="btn btn-success" type="submit">✅ কোর্স যোগ করুন</button>
+    <button id="updateBtn" class="btn btn-primary ms-2" type="button" style="display:none;">✏️ আপডেট করুন</button>
+    <button id="cancelEditBtn" class="btn btn-warning ms-2" type="button" style="display:none;">❌ বাতিল করুন</button>
+  </form>
+
+
+  <script>
+
+    
+    let editCourseId = null;
+
+    function addMentor(value = '') {
+      const container = document.getElementById('mentorsContainer');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'mentor';
+      input.className = 'form-control mb-2';
+      input.required = true;
+      input.value = value;
+      container.appendChild(input);
+    }
+
+    function addSubject(subject = null) {
+      const container = document.getElementById('subjectsContainer');
+
+      const subjectDiv = document.createElement('div');
+      subjectDiv.className = 'sub-section';
+
+      const subjectNameVal = subject ? subject.subjectName : '';
+
+      let chaptersHTML = '';
+      if (subject && subject.chapters && subject.chapters.length > 0) {
+        subject.chapters.forEach(chap => {
+          chaptersHTML += createChapterHTML(chap);
+        });
+      }
+
+      subjectDiv.innerHTML = `
+        <div class="mb-2">
+          <label class="form-label">বিষয়ের নাম</label>
+          <input type="text" class="form-control subject-name" required value="${subjectNameVal}" />
+        </div>
+        <div class="chapters-container">
+          ${chaptersHTML}
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-primary mb-3" onclick="addChapter(this)">➕ নতুন চ্যাপ্টার</button>
+      `;
+
+      container.appendChild(subjectDiv);
+    }
+function createChapterHTML(chapter = null) {
+  const nameVal = chapter?.name || '';
+  const videoVal = chapter?.videoId || '';
+  const images = chapter?.image || [{ title: '', url: '' }];
+  const pdfs = chapter?.pdf || [{ title: '', url: '' }];
+
+  return `
+  <div class="mb-3 chapter-section">
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <input type="text" class="form-control chapter-name" placeholder="চ্যাপ্টারের নাম" required value="${nameVal}" />
+      </div>
+      <div class="col-md-6">
+        <input type="text" class="form-control chapter-video" placeholder="ভিডিও আইডি" required value="${videoVal}" />
+      </div>
+    </div>
+
+    <div class="mb-2">
+      <label>📷 ছবির Title ও URL:</label>
+      <div class="image-url-container">
+        ${images.map(img => `
+          <div class="row mb-1">
+            <div class="col">
+              <input type="text" class="form-control chapter-image-title" placeholder="Title" value="${img.title}" />
+            </div>
+            <div class="col">
+              <input type="text" class="form-control chapter-image-url" placeholder="Image URL" value="${img.url}" />
+            </div>
+          </div>
+        `).join('')}
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addImageUrl(this)">➕ আরও ছবি</button>
+      </div>
+    </div>
+
+    <div class="mb-2">
+      <label>📄 PDF Title ও URL:</label>
+      <div class="pdf-url-container">
+        ${pdfs.map(pdf => `
+          <div class="row mb-1">
+            <div class="col">
+              <input type="text" class="form-control chapter-pdf-title" placeholder="Title" value="${pdf.title}" />
+            </div>
+            <div class="col">
+              <input type="text" class="form-control chapter-pdf-url" placeholder="PDF URL" value="${pdf.url}" />
+            </div>
+          </div>
+        `).join('')}
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPdfUrl(this)">➕ আরও PDF</button>
+      </div>
+    </div>
+    <hr/>
+  </div>
+  `;
+}
+
+
+    function addChapter(button, chapter = null) {
+      const container = button.previousElementSibling;
+      const div = document.createElement('div');
+      div.className = 'mb-3 chapter-section';
+
+      if (chapter) {
+        div.innerHTML = createChapterHTML(chapter);
+      } else {
+        div.innerHTML = createChapterHTML();
+      }
+
+      container.appendChild(div);
+    }
+
+function addImageUrl(button) {
+  const container = button.parentElement;
+  const row = document.createElement('div');
+  row.className = 'row mb-1';
+  row.innerHTML = `
+    <div class="col">
+      <input type="text" class="form-control chapter-image-title" placeholder="Title" />
+    </div>
+    <div class="col">
+      <input type="text" class="form-control chapter-image-url" placeholder="Image URL" />
+    </div>
+  `;
+  container.insertBefore(row, button);
+}
+
+function addPdfUrl(button) {
+  const container = button.parentElement;
+  const row = document.createElement('div');
+  row.className = 'row mb-1';
+  row.innerHTML = `
+    <div class="col">
+      <input type="text" class="form-control chapter-pdf-title" placeholder="Title" />
+    </div>
+    <div class="col">
+      <input type="text" class="form-control chapter-pdf-url" placeholder="PDF URL" />
+    </div>
+  `;
+  container.insertBefore(row, button);
+}
+
+
+    function resetForm() {
+      const form = document.getElementById('courseForm');
+      form.reset();
+      document.getElementById('subjectsContainer').innerHTML = '<h5 class="mt-4">📚 বিষয়সমূহ</h5>';
+      document.getElementById('mentorsContainer').innerHTML = `
+        <label class="form-label">মেন্টরের নাম</label>
+        <div class="input-group mb-2">
+          <input type="text" class="form-control" name="mentor" required />
+          <button type="button" class="btn btn-secondary" onclick="addMentor()">➕ আরও মেন্টর</button>
+        </div>
+      `;
+      editCourseId = null;
+      toggleButtons(false);
+    }
+
+    function toggleButtons(editing) {
+      document.querySelector('#courseForm button[type="submit"]').style.display = editing ? 'none' : 'inline-block';
+      document.getElementById('updateBtn').style.display = editing ? 'inline-block' : 'none';
+      document.getElementById('cancelEditBtn').style.display = editing ? 'inline-block' : 'none';
+    }
+
+    async function loadCourses() {
+      const res = await fetch('/api/courses');
+      if (!res.ok) {
+        alert('কোর্স লোডে সমস্যা হয়েছে');
+        return;
+      }
+      const courses = await res.json();
+      const container = document.getElementById('courseList');
+      container.innerHTML = '';
+
+      courses.forEach(course => {
+        const div = document.createElement('div');
+        div.className = 'col-md-4';
+        div.innerHTML = `
+          <div class="card h-100">
+            <img src="${course.thumbnail}" class="card-img-top" style="height: 200px; object-fit: cover;" />
+            <div class="card-body">
+              <h5 class="card-title">${course.title}</h5>
+              <p class="card-text">${course.shortDescription}</p>
+              <p class="card-text"><strong>id:</strong> ${course.courseId ? `${course.courseId}` : 'Free'}</p>
+              <button class="btn btn-sm btn-primary me-2" onclick="editCourse('${course._id}')">✏️ এডিট</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteCourse('${course._id}')">🗑️ ডিলিট</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function editCourse(id) {
+      const res = await fetch(`/api/courses/${id}`);
+      if (!res.ok) {
+        alert('কোর্স লোড করতে সমস্যা হয়েছে');
+        return;
+      }
+      const course = await res.json();
+      const form = document.getElementById('courseForm');
+
+      form.courseId.value = course.courseId || '';
+      form.title.value = course.title || '';
+      form.thumbnail.value = course.thumbnail || '';
+      form.shortDescription.value = course.shortDescription || '';
+      form.fullDescription.value = course.fullDescription || '';
+      form.introVideoId.value = course.introVideoId || '';
+
+      // Reset mentors and add existing
+      const mentorsContainer = document.getElementById('mentorsContainer');
+      mentorsContainer.innerHTML = '<label class="form-label">মেন্টরের নাম</label>';
+      course.mentors.forEach(m => addMentor(m));
+
+      // Reset subjects and add existing
+      const subjectsContainer = document.getElementById('subjectsContainer');
+      subjectsContainer.innerHTML = '<h5 class="mt-4">📚 বিষয়সমূহ</h5>';
+      course.subjects.forEach(subject => addSubject(subject));
+
+      form.price.value = course.price || '';
+      form.promoCode.value = course.promoCode || '';
+      form.promoDiscount.value = course.promoDiscount || '';
+
+      editCourseId = id;
+      toggleButtons(true);
+    }
+
+    async function deleteCourse(id) {
+      if (!confirm('আপনি কি নিশ্চিত ডিলিট করতে চান?')) return;
+      const res = await fetch(`/api/courses/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        alert('ডিলিট করতে সমস্যা হয়েছে');
+        return;
+      }
+      alert('কোর্স মুছে ফেলা হয়েছে');
+      await loadCourses();
+    }
+
+    async function saveCourse(event) {
+  event.preventDefault();
+  const form = event.target;
+
+  const mentors = Array.from(document.querySelectorAll('#mentorsContainer input[name="mentor"]'))
+    .map(i => i.value.trim())
+    .filter(Boolean);
+
+  const subjectDivs = document.querySelectorAll('#subjectsContainer .sub-section');
+
+  const subjects = Array.from(subjectDivs).map(subDiv => {
+    const subjectName = subDiv.querySelector('.subject-name').value.trim();
+    const chapterElements = subDiv.querySelectorAll('.chapter-section');
+
+    const chapters = Array.from(chapterElements).map(section => {
+      const name = section.querySelector('.chapter-name')?.value.trim();
+      const videoId = section.querySelector('.chapter-video')?.value.trim();
+
+      // Title + URL for images
+      const image = Array.from(section.querySelectorAll('.image-url-container .row')).map(row => {
+        const title = row.querySelector('.chapter-image-title')?.value.trim();
+        const url = row.querySelector('.chapter-image-url')?.value.trim();
+        return { title, url };
+      }).filter(obj => obj.title || obj.url);  // remove empty entries
+
+      // Title + URL for PDFs
+      const pdf = Array.from(section.querySelectorAll('.pdf-url-container .row')).map(row => {
+        const title = row.querySelector('.chapter-pdf-title')?.value.trim();
+        const url = row.querySelector('.chapter-pdf-url')?.value.trim();
+        return { title, url };
+      }).filter(obj => obj.title || obj.url);  // remove empty entries
+
+      return { name, videoId, image, pdf };
+    });
+
+    return { subjectName, chapters };
+  });
+
+  const data = {
+    courseId: form.courseId.value.trim(),
+    title: form.title.value.trim(),
+    thumbnail: form.thumbnail.value.trim(),
+    shortDescription: form.shortDescription.value.trim(),
+    fullDescription: form.fullDescription.value.trim(),
+    introVideoId: form.introVideoId.value.trim(),
+    mentors,
+    subjects,
+    price: Number(form.price.value.trim()),
+    promoCode: form.promoCode.value.trim(),
+    promoDiscount: Number(form.promoDiscount.value.trim()),
+  };
+
+  try {
+    let res;
+    if (editCourseId) {
+      res = await fetch(`/api/courses/${editCourseId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    } else {
+      res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    }
+    if (!res.ok) {
+      alert('কোর্স সংরক্ষণে সমস্যা হয়েছে');
+      return;
+    }
+    alert(editCourseId ? 'কোর্স আপডেট হয়েছে' : 'কোর্স যোগ হয়েছে');
+    resetForm();
+    await loadCourses();
+  } catch (err) {
+    alert('ত্রুটি: ' + err.message);
+  }
+}
+
+
+    document.getElementById('courseForm').addEventListener('submit', saveCourse);
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+      if (!editCourseId) return;
+      // trigger submit to saveCourse with current data
+      const form = document.getElementById('courseForm');
+      await saveCourse({ target: form, preventDefault: () => {} });
+    });
+    document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+
+
+
+    // Init form
+    resetForm();
+    loadCourses();
+  </script>
+
+<script>
+
+  // here all is ok.
+const loggedInUser = JSON.parse(localStorage.getItem('user'));
+const token = localStorage.getItem('token');
+
+if (!loggedInUser || !token || loggedInUser.role !== 'admin') {
+  alert("❌ আপনি অ্যাডমিন নন।");
+  // ইউজার লগইন করেনি অথবা রোল 'admin' না
+  window.location.href = '/home.html'; // অথবা অন্য কোনো নো এন্ট্রি পেজ
+} else {
+  console.log("লগইন করা অ্যাডমিন ইউজার:", loggedInUser);
+  // এখানে অ্যাডমিন ইউজারের জন্য পেজ কাস্টমাইজ করো   
+}
+
+</script>
+
+
+</body>
+</html>

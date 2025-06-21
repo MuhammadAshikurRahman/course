@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>MCQ ম্যানেজমেন্ট</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Anek Bangla; background: #f2f2f2; padding: 1rem; margin: 0; }
+    .box, .mcq-list {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 1rem auto;
+      max-width: 700px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    button {
+      padding: 0.4rem 0.8rem;
+      margin: 0.2rem;
+      background: green;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .delete-btn { background: red; }
+    .edit-btn { background: orange; }
+    .save-btn { background: blue; }
+    .subject-btn, .chapter-btn {
+      background: #444;
+      color: white;
+      margin: 3px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .active-btn { background: #007bff !important; }
+    h2, h3 { text-align: center; font-size: 18px; }
+    label {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 2px;
+      display: block;
+    }
+    .mcq-item {
+      border-bottom: 1px solid #ddd;
+      padding: 0.5rem 0;
+    }
+    @media screen and (max-width: 600px) {
+      .box, .mcq-list {
+        padding: 0.8rem;
+        margin: 0.5rem;
+      }
+      button, input, textarea, select, label {
+        font-size: 13px;
+      }
+      h2, h3 {
+        font-size: 16px;
+      }
+    }
+    .subjectcode, .chaptercode {
+
+      color: rgb(255, 77, 0);
+    }
+  </style>
+</head>
+<body>
+
+    <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px;">MCQ ম্যানেজমেন্ট সিস্টেম</h1>
+  <div class="mcq-list">
+    <h2>বিষয় নির্বাচন করুন</h2>
+    <div id="subjectButtons"></div>
+    <div id="chapterButtons"></div>
+    <div id="mcqDisplay"></div>
+  </div>
+
+  <div class="box">
+    <h2>নতুন MCQ যুক্ত করুন</h2>
+
+    <label>বিষয় নির্বাচন করুন:</label>
+    <select id="subjectCode">
+      <option disabled selected>বিষয় নির্বাচন করুন</option>
+    </select>
+
+    <label>অধ্যায় নির্বাচন করুন:</label>
+    <select id="chapterCode">
+      <option disabled selected>প্রথমে একটি বিষয় নির্বাচন করুন</option>
+    </select>
+
+    <label>প্রশ্ন:</label>
+    <textarea id="question" rows="2"></textarea>
+
+    <label>অপশনসমূহ:</label>
+    <input type="text" placeholder="Option 1" id="opt1" />
+    <input type="text" placeholder="Option 2" id="opt2" />
+    <input type="text" placeholder="Option 3" id="opt3" />
+    <input type="text" placeholder="Option 4" id="opt4" />
+
+    <label>সঠিক উত্তর (১-৪):</label>
+    <input type="number" min="1" max="4" id="correct" />
+
+    <label>সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক):</label>
+    <textarea id="explanation" rows="2"></textarea>
+
+    <button onclick="submitMcq()">MCQ জমা দিন</button>
+    <p id="msg"></p>
+  </div>
+
+  <script>
+    const subjectList = [
+      { name: 'গণিত', code: 'math' },
+      { name: 'পদার্থ', code: 'phy' }
+    ];
+
+    const chapterList = [
+      { name: 'সংখ্যা পদ্ধতি', code: 'math-1', subjectCode: 'math' },
+      { name: 'অ্যালজেব্রা', code: 'math-2', subjectCode: 'math' },
+      { name: 'চাপ ও বল', code: 'phy-1', subjectCode: 'phy' }
+    ];
+
+    let currentSubject = '';
+    let currentChapter = '';
+
+    const subjectDropdown = document.getElementById('subjectCode');
+    const chapterDropdown = document.getElementById('chapterCode');
+    const subjectButtonsDiv = document.getElementById('subjectButtons');
+    const chapterButtonsDiv = document.getElementById('chapterButtons');
+    const mcqDisplay = document.getElementById('mcqDisplay');
+
+    subjectList.forEach(sub => {
+      subjectDropdown.innerHTML += `<option value="${sub.code}">${sub.name}</option>`;
+      subjectButtonsDiv.innerHTML += `<button class="subject-btn" onclick="loadChapters('${sub.code}', this)">${sub.name}</button>`;
+    });
+
+    subjectDropdown.addEventListener('change', () => {
+      const selected = subjectDropdown.value;
+      if (!selected) {
+        chapterDropdown.innerHTML = '<option disabled selected>প্রথমে একটি বিষয় নির্বাচন করুন</option>';
+        return;
+      }
+      localStorage.setItem('selectedSubject', selected);
+      const filtered = chapterList.filter(ch => ch.subjectCode === selected);
+      chapterDropdown.innerHTML = '';
+      filtered.forEach(ch => {
+        chapterDropdown.innerHTML += `<option value="${ch.code}">${ch.name}</option>`;
+      });
+      const storedChapter = localStorage.getItem('selectedChapter');
+      if (storedChapter && filtered.find(ch => ch.code === storedChapter)) {
+        chapterDropdown.value = storedChapter;
+      } else {
+        chapterDropdown.selectedIndex = 0;
+      }
+    });
+
+    chapterDropdown.addEventListener('change', () => {
+      localStorage.setItem('selectedChapter', chapterDropdown.value);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const storedSubject = localStorage.getItem('selectedSubject');
+      if (storedSubject && subjectList.find(s => s.code === storedSubject)) {
+        subjectDropdown.value = storedSubject;
+      }
+      subjectDropdown.dispatchEvent(new Event('change'));
+    });
+
+    async function submitMcq() {
+      const data = {
+        subject: subjectDropdown.value,
+        chapter: chapterDropdown.value,
+        qs: document.getElementById('question').value.trim(),
+        options: [
+          document.getElementById('opt1').value.trim(),
+          document.getElementById('opt2').value.trim(),
+          document.getElementById('opt3').value.trim(),
+          document.getElementById('opt4').value.trim()
+        ],
+        ans: parseInt(document.getElementById('correct').value),
+        explanation: document.getElementById('explanation').value.trim()
+      };
+
+      if (!data.qs || data.options.some(o => !o) || !data.ans || data.ans < 1 || data.ans > 4) {
+        document.getElementById('msg').textContent = "সকল প্রয়োজনীয় তথ্য সঠিকভাবে পূরণ করুন।";
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/mcq/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          document.getElementById('msg').textContent = result.message || "MCQ যুক্ত হয়েছে!";
+          ['question','opt1','opt2','opt3','opt4','correct','explanation'].forEach(id => document.getElementById(id).value = '');
+          loadMcqs(currentChapter);
+        } else {
+          document.getElementById('msg').textContent = result.error || "কিছু সমস্যা হয়েছে।";
+        }
+      } catch (err) {
+        document.getElementById('msg').textContent = "সার্ভার সমস্যা হয়েছে।";
+      }
+    }
+
+    function loadChapters(subjectCode, btn) {
+      currentSubject = subjectCode;
+      document.querySelectorAll('.subject-btn').forEach(b => b.classList.remove('active-btn'));
+      btn.classList.add('active-btn');
+      const filtered = chapterList.filter(ch => ch.subjectCode === subjectCode);
+      chapterButtonsDiv.innerHTML = '';
+      filtered.forEach(ch => {
+        chapterButtonsDiv.innerHTML += `<button class="chapter-btn" onclick="loadMcqs('${ch.code}', this)">${ch.name}</button>`;
+      });
+      mcqDisplay.innerHTML = '';
+    }
+
+    async function loadMcqs(chapterCode, btn) {
+      currentChapter = chapterCode;
+      document.querySelectorAll('.chapter-btn').forEach(b => b.classList.remove('active-btn'));
+      if (btn) btn.classList.add('active-btn');
+      try {
+        const res = await fetch(`/api/mcq/by-chapter?subject=${currentSubject}&chapter=${chapterCode}`);
+        const data = await res.json();
+
+        mcqDisplay.innerHTML = `<h3>${chapterList.find(c => c.code === chapterCode)?.name || chapterCode}</h3>`;
+        if (data.length === 0) {
+          mcqDisplay.innerHTML += '<p style="text-align:center; color:gray">এই অধ্যায়ে কোন MCQ নেই।</p>';
+          return;
+        }
+
+        data.forEach(mcq => {
+          mcqDisplay.innerHTML += `
+            <div class="mcq-item" data-id="${mcq._id}">
+              <label>প্রশ্ন:</label>
+              <input type="text" class="qs" value="${mcq.qs}" disabled />
+              ${mcq.options.map((opt, i) => `<label>অপশন ${i + 1}:</label><input type="text" class="opt" value="${opt}" disabled />`).join('')}
+              <label>সঠিক উত্তর (১-৪):</label>
+              <input type="number" class="ans" value="${mcq.ans}" min="1" max="4" disabled />
+              <label>ব্যাখ্যা:</label>
+              <textarea class="explanation" disabled>${mcq.explanation || ''}</textarea>
+              <button class="edit-btn" onclick="editMcq(this)">✏️ সম্পাদনা</button>
+              <button class="save-btn" onclick="updateMcq('${mcq._id}', this)">💾 সংরক্ষণ</button>
+              <button class="delete-btn" onclick="deleteMcq('${mcq._id}')">🗑️ মুছুন</button>
+            </div>`;
+        });
+      } catch (err) {
+        mcqDisplay.innerHTML = "MCQ লোড করতে সমস্যা হয়েছে।";
+      }
+    }
+
+    function editMcq(btn) {
+      const parent = btn.closest('.mcq-item');
+      parent.querySelectorAll('input, textarea').forEach(e => e.disabled = false);
+    }
+
+    async function updateMcq(id, btn) {
+      const parent = btn.closest('.mcq-item');
+      const data = {
+        subject: currentSubject,
+        chapter: currentChapter,
+        qs: parent.querySelector('.qs').value,
+        options: Array.from(parent.querySelectorAll('.opt')).map(i => i.value),
+        ans: parseInt(parent.querySelector('.ans').value),
+        explanation: parent.querySelector('.explanation').value
+      };
+
+      try {
+        const res = await fetch(`/api/mcq/update/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          alert('MCQ আপডেট হয়েছে');
+          loadMcqs(currentChapter);
+        } else {
+          alert(result.error || 'আপডেট ব্যর্থ হয়েছে');
+        }
+      } catch (err) {
+        alert('সার্ভার সমস্যা');
+      }
+    }
+
+    async function deleteMcq(id) {
+      if (!confirm('আপনি কি নিশ্চিতভাবে মুছতে চান?')) return;
+      try {
+        const res = await fetch(`/api/mcq/delete/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (res.ok) {
+          alert(result.message);
+          loadMcqs(currentChapter);
+        } else {
+          alert(result.error);
+        }
+      } catch (err) {
+        alert('সার্ভার সমস্যা');
+      }
+    }
+  </script>
+</body>
+</html>

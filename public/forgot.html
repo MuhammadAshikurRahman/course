@@ -1,0 +1,156 @@
+<!-- forgot.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password</title>
+  <style>
+        body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #004e92, #000428);
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .auth-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    .auth-container h2 {
+      margin-bottom: 1rem;
+    }
+    form input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border: none;
+      border-radius: 5px;
+    }
+    form button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #00c6ff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    form button:hover {
+      background: #0072ff;
+    }
+    .switch-link {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .switch-link a {
+      color: #00c6ff;
+      text-decoration: none;
+    }
+    #formMessage {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: orange;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Forgot Password</h2>
+    <form id="otpForm">
+      <input type="text" name="phone" placeholder="Phone (11 digits)" required maxlength="11" />
+      <input type="text" name="otp" placeholder="Enter OTP" required disabled />
+      <button type="button" id="otpBtn">Send OTP</button>
+
+      <input type="password" name="newPassword" placeholder="New Password" required disabled />
+      <button type="submit" disabled>Reset Password</button>
+    </form>
+
+    <p id="formMessage"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById('otpForm');
+    const otpBtn = document.getElementById('otpBtn');
+    const formMessage = document.getElementById('formMessage');
+    let otpSent = false;
+    let otpVerified = false;
+
+    otpBtn.addEventListener('click', async () => {
+      const phone = form.phone.value.trim();
+
+      if (!phone) return formMessage.textContent = "ফোন নম্বর দিন";
+
+      if (!otpSent) {
+        const res = await fetch('/api/auth/send-reset-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          formMessage.textContent = "OTP পাঠানো হয়েছে, ইমেইল চেক করুন।";
+          form.otp.disabled = false;
+          otpSent = true;
+          otpBtn.textContent = "Verify OTP";
+        } else {
+          formMessage.textContent = data.error || "OTP পাঠানো যায়নি";
+        }
+      } else if (!otpVerified) {
+        const otp = form.otp.value.trim();
+        const res = await fetch('/api/auth/verify-reset-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, otp })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          formMessage.textContent = "OTP যাচাই সফল হয়েছে। নতুন পাসওয়ার্ড দিন।";
+          otpVerified = true;
+          form.newPassword.disabled = false;
+          form.querySelector('button[type="submit"]').disabled = false;
+          form.otp.disabled = true;
+          otpBtn.disabled = true;
+        } else {
+          formMessage.textContent = data.error || "OTP ভুল";
+        }
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phone = form.phone.value.trim();
+      const newPassword = form.newPassword.value.trim();
+
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        formMessage.textContent = "পাসওয়ার্ড রিসেট সফল হয়েছে। এখন লগইন করুন।";
+        formMessage.style.color = 'lightgreen';
+        setTimeout(() => window.location.href = 'login.html', 1500);
+      } else {
+        formMessage.textContent = data.error || "পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে";
+      }
+    });
+  </script>
+</body>
+</html>

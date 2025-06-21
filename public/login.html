@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Polytech Academy</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #004e92, #000428);
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .auth-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    .auth-container h2 {
+      margin-bottom: 1rem;
+    }
+    form input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border: none;
+      border-radius: 5px;
+    }
+    form button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #00c6ff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    form button:hover {
+      background: #0072ff;
+    }
+    .switch-link {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .switch-link a {
+      color: #00c6ff;
+      text-decoration: none;
+    }
+    #formMessage {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: orange;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Login to Your Account</h2>
+    <form id="loginForm">
+      <input type="text" placeholder="Phone (11 digits)" name="phone" required maxlength="11">
+      <input type="password" placeholder="Password (8 digits)" name="password" required maxlength="8">
+      <button type="submit">Login</button>
+    </form>
+
+    <p class="switch-link">
+  <a href="forgot.html">Forgot Password?</a>
+</p>
+
+
+    <!-- ✅ Message Box -->
+    <p id="formMessage"></p>
+
+    <p class="switch-link">Don't have an account? <a href="register.html">Create Account</a></p>
+  </div>
+
+  <script>
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const phone = e.target.phone.value;
+    const password = e.target.password.value;
+    const messageBox = document.getElementById("formMessage");
+
+    messageBox.textContent = '';
+    messageBox.style.color = 'orange';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        messageBox.textContent = data.message || 'লগইন সফল হয়েছে';
+        messageBox.style.color = 'lightgreen';
+
+        // ✅ Save token and user info
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('loggedIn', 'true');
+
+
+        setTimeout(() => {
+          window.location.href = 'home.html'; // তুমি যেই হোম পেইজ দেখাতে চাও
+        }, 1500);
+
+      } else {
+        messageBox.textContent = data.error || data.message || 'লগইন ব্যর্থ হয়েছে';
+      }
+
+    } catch (err) {
+      messageBox.textContent = 'সার্ভার এরর হয়েছে, পরে আবার চেষ্টা করুন';
+    }
+  });
+</script>
+
+</body>
+</html>

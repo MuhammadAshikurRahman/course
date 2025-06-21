@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - কোর্স কন্টেন্ট ম্যানেজমেন্ট</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h2 class="text-center mb-4">📚 কোর্স কন্টেন্ট ম্যানেজমেন্ট</h2>
+
+    <!-- Add Chapter Form -->
+    <div class="card mb-4">
+      <div class="card-header">নতুন চ্যাপ্টার যুক্ত করুন</div>
+      <div class="card-body">
+        <form id="chapterForm">
+          <div class="mb-3">
+            <label>চ্যাপ্টারের নাম</label>
+            <input type="text" class="form-control" id="chapterName" required>
+          </div>
+          <div class="mb-3">
+            <label>বিষয়</label>
+            <input type="text" class="form-control" id="subject" required>
+          </div>
+          <button type="submit" class="btn btn-primary">যুক্ত করুন</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Video Form -->
+    <div class="card mb-4">
+      <div class="card-header">নতুন ভিডিও যুক্ত করুন</div>
+      <div class="card-body">
+        <form id="videoForm">
+          <div class="mb-3">
+            <label>যে চ্যাপ্টারের জন্য</label>
+            <select id="chapterSelect" class="form-select" required></select>
+          </div>
+          <div class="mb-3">
+            <label>ভিডিওর নাম</label>
+            <input type="text" class="form-control" id="videoTitle" required>
+          </div>
+          <div class="mb-3">
+            <label>YouTube ভিডিও লিঙ্ক</label>
+            <input type="url" class="form-control" id="videoUrl" required>
+          </div>
+          <button type="submit" class="btn btn-success">ভিডিও যুক্ত করুন</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Chapter List with Videos -->
+    <div class="card">
+      <div class="card-header">সকল চ্যাপ্টার ও ভিডিও</div>
+      <div class="card-body" id="chapterList">
+        <p>লোড হচ্ছে...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchChapters() {
+      const res = await fetch('/api/chapters');
+      const data = await res.json();
+      const select = document.getElementById('chapterSelect');
+      const listDiv = document.getElementById('chapterList');
+      select.innerHTML = '';
+      listDiv.innerHTML = '';
+
+      data.forEach(ch => {
+        const opt = document.createElement('option');
+        opt.value = ch._id;
+        opt.textContent = ch.name;
+        select.appendChild(opt);
+
+        const div = document.createElement('div');
+        div.className = 'mb-3';
+        div.innerHTML = `<h5>${ch.subject} - ${ch.name}</h5>`;
+        if (ch.videos && ch.videos.length > 0) {
+          const ul = document.createElement('ul');
+          ch.videos.forEach(v => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${v.title}</strong> - <a href="${v.url}" target="_blank">ভিডিও দেখুন</a>`;
+            ul.appendChild(li);
+          });
+          div.appendChild(ul);
+        } else {
+          div.innerHTML += '<p>কোনো ভিডিও নেই</p>';
+        }
+        listDiv.appendChild(div);
+      });
+    }
+
+    document.getElementById('chapterForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('chapterName').value;
+      const subject = document.getElementById('subject').value;
+
+      await fetch('/api/chapters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, subject })
+      });
+
+      e.target.reset();
+      fetchChapters();
+    });
+
+    document.getElementById('videoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const chapterId = document.getElementById('chapterSelect').value;
+      const title = document.getElementById('videoTitle').value;
+      const url = document.getElementById('videoUrl').value;
+
+      await fetch(`/api/chapters/${chapterId}/videos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, url })
+      });
+
+      e.target.reset();
+      fetchChapters();
+    });
+
+    fetchChapters();
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>MCQ কোর্স</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Anek Bangla', sans-serif;
+      background: #f0f2f5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 1rem;
+    }
+    .course-info {
+      text-align: center;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    .course-info h1 {
+      font-size: 22px;
+      margin-bottom: 0.5rem;
+    }
+    .course-info p {
+      margin: 0.5rem 0;
+    }
+    .buy-button {
+      background: #28a745;
+      color: white;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .layout {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .sidebar {
+      width: 250px;
+    }
+
+    .subject-group {
+      background: #2d2f36;
+      color: white;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+    }
+
+    .subject-toggle {
+      width: 100%;
+      background: #2d2f36;
+      color: white;
+      padding: 10px;
+      border: none;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .test-list {
+      display: none;
+      background: #f5f5f5;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+    }
+
+    .test-list button {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 5px;
+      background: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .test-details {
+      flex-grow: 1;
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      min-height: 200px;
+    }
+
+    .start-button {
+      margin-top: 1rem;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media screen and (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+        align-items: center;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .test-list button, .subject-toggle {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Course Info -->
+    <div class="course-info">
+      <h1>MCQ কোর্স: ভর্তি প্রস্তুতি</h1>
+      <p>মূল্য: ৪৯৯ টাকা</p>
+      <p>এই কোর্সে থাকছে সকল বিষয়ের অধ্যায়ভিত্তিক MCQ অনুশীলন ও পরীক্ষার সুবিধা।</p>
+      <button class="buy-button">কোর্সটি কিনুন</button>
+    </div>
+
+    <!-- Layout -->
+    <div class="layout">
+      <!-- Sidebar with subjects -->
+      <div class="sidebar">
+        <div class="subject-group">
+          <button class="subject-toggle">গণিত</button>
+          <div class="test-list">
+            <button onclick="showTestDetails('গণিত মডেল টেস্ট ১')">Model Test 1</button>
+            <button onclick="showTestDetails('গণিত মডেল টেস্ট ২')">Model Test 2</button>
+          </div>
+        </div>
+        <div class="subject-group">
+          <button class="subject-toggle">পদার্থ</button>
+          <div class="test-list">
+            <button onclick="showTestDetails('পদার্থ মডেল টেস্ট ১')">Model Test 1</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test details area -->
+      <div class="test-details" id="testDetails">
+        <h2>টেস্ট সিলেক্ট করুন</h2>
+        <p>আপনি যেকোনো একটি মডেল টেস্ট বেছে নিন।</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Accordion behavior
+    document.querySelectorAll('.subject-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.test-list').forEach(list => {
+          if (list !== button.nextElementSibling) {
+            list.style.display = 'none';
+          }
+        });
+
+        const panel = button.nextElementSibling;
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+      });
+    });
+
+    // Show test details on click
+    function showTestDetails(testName) {
+      const testDetails = document.getElementById('testDetails');
+      testDetails.innerHTML = `
+        <h2>${testName}</h2>
+        <p>এই পরীক্ষায় থাকবে ২৫টি প্রশ্ন। সময়: ৩০ মিনিট। সঠিক উত্তর প্রতি ১ নম্বর।</p>
+        <button class="start-button">🟢 টেস্ট শুরু করুন</button>
+      `;
+      window.scrollTo({ top: testDetails.offsetTop - 30, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

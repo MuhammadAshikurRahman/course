@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>প্রোফাইল</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      padding: 2rem;
+    }
+    .profile-box {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #message {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: green;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-box">
+    <h2>আপনার প্রোফাইল</h2>
+    <label>নাম:</label>
+    <input type="text" id="name" />
+    
+    
+    <label>বয়স:</label>
+    <input type="number" id="age" />
+    
+    <label>ফোন নম্বর:</label>
+    <input type="text" id="phone" disabled />
+
+    <label>Email</label>
+    <input type="text" id="email" disabled />
+    
+    <label>আপনার কোর্সসমূহ:</label>
+    <ul id="courseList"></ul>
+
+    <button onclick="updateProfile()">Update</button>
+
+    <p id="message"></p>
+  </div>
+
+  <script>
+  const phone = JSON.parse(localStorage.getItem('user'))?.phone;
+  if (!phone) {
+    alert("আপনি লগইন করেননি!");
+    window.location.href = "login.html";
+  }
+
+  async function fetchUser() {
+    try {
+      const res = await fetch(`/api/users/${phone}`);
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('age').value = data.age || '';
+        document.getElementById('phone').value = data.phone;
+        document.getElementById('email').value = data.email || '';
+      } else {
+        document.getElementById('message').textContent = data.message || "ডেটা লোড করতে ব্যর্থ।";
+      }
+    } catch (err) {
+      document.getElementById('message').textContent = "সার্ভার সমস্যা হয়েছে।";
+    }
+  }
+
+  // 🔥 এই ফাংশনটা বাইরের দিকে রাখতে হবে
+  async function fetchApprovedCourses() {
+    try {
+      const res = await fetch(`/api/payments/approved-courses/${phone}`);
+      const data = await res.json();
+
+      const list = document.getElementById('courseList');
+      list.innerHTML = '';
+
+      (data.yourCourses || []).forEach(course => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="courseview.html?courseId=${course.courseId}">${course.title}</a>`;
+        list.appendChild(li);
+      });
+
+    } catch (err) {
+      console.error('কোর্স লোড করতে সমস্যা হয়েছে');
+    }
+  }
+
+  async function updateProfile() {
+    const name = document.getElementById('name').value;
+    const age = document.getElementById('age').value;
+
+    try {
+      const res = await fetch(`/api/users/${phone}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, age })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('message').textContent = "আপনার প্রোফাইল আপডেট হয়েছে।";
+      } else {
+        document.getElementById('message').textContent = data.message || "আপডেট ব্যর্থ হয়েছে।";
+      }
+    } catch (err) {
+      document.getElementById('message').textContent = "সার্ভার এরর হয়েছে।";
+    }
+  }
+
+  // 🔽 দুটোই আলাদাভাবে কল করো
+  fetchUser();
+  fetchApprovedCourses();
+</script>
+
+</body>
+</html>

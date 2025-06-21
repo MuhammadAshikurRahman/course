@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register - Polytech Academy</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #004e92, #000428);
+      color: white;
+      margin: 0; padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    .auth-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    .auth-container h2 {
+      margin-bottom: 1rem;
+    }
+    form input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+    form input:disabled {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #ccc;
+    }
+    form button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #00c6ff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 1rem;
+    }
+    form button:hover:enabled {
+      background: #0072ff;
+    }
+    .switch-link {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .switch-link a {
+      color: #00c6ff;
+      text-decoration: none;
+    }
+    #formMessage {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: orange;
+      min-height: 1.2em;
+    }
+    .otp-section {
+      margin-bottom: 1rem;
+    }
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Create a New Account</h2>
+    <form id="registerForm">
+      <div class="otp-section">
+        <input type="email" placeholder="Email" name="email" required />
+        <input type="text" placeholder="Enter OTP" name="otp" disabled required style="flex:1;" /> 
+        <div style="display:flex; gap:0.5rem; margin-top:0.3rem;">
+          
+          <button type="button" id="otpBtn" onclick="handleOtpClick()">Send OTP</button>
+        </div>
+      </div>
+
+      <input type="text" placeholder="Name" name="name" required disabled />
+      <input type="number" placeholder="Age" name="age" required disabled />
+      <input type="text" placeholder="Phone (11 digits)" name="phone" required maxlength="11" disabled />
+      <input type="password" placeholder="Password (min 8 characters)" name="password" required disabled />
+      <button type="submit" disabled>Register</button>
+    </form>
+
+    <p id="formMessage"></p>
+
+    <p class="switch-link">Already have an account? <a href="login.html">Login</a></p>
+  </div>
+
+  <script>
+    const otpBtn = document.getElementById("otpBtn");
+    const form = document.getElementById("registerForm");
+    const formMessage = document.getElementById("formMessage");
+    const otpInput = form.querySelector('input[name="otp"]');
+    let otpSent = false;
+    let otpVerified = false;
+
+    // Enable or disable the other inputs except email and OTP
+    function setInputsEnabled(enabled) {
+      ["name", "age", "phone", "password"].forEach(name => {
+        const input = form.querySelector(`input[name="${name}"]`);
+        input.disabled = !enabled;
+      });
+      form.querySelector('button[type="submit"]').disabled = !enabled;
+    }
+
+    // প্রথমে বাকিগুলো disabled থাকবে
+    setInputsEnabled(false);
+    otpInput.disabled = true; // OTP ইনপুটও প্রাথমিকভাবে disabled
+
+    async function handleOtpClick() {
+      const email = form.email.value.trim();
+      formMessage.style.color = "orange";
+      formMessage.textContent = "";
+
+      if (!email) {
+        formMessage.textContent = "অনুগ্রহ করে ইমেইল দিন";
+        return;
+      }
+
+      if (!otpSent) {
+        // Send OTP
+        try {
+          otpBtn.disabled = true;
+          const res = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            formMessage.style.color = "lightgreen";
+            formMessage.textContent = "OTP পাঠানো হয়েছে, ইমেইল চেক করুন।";
+            otpSent = true;
+            otpInput.disabled = false;
+            otpBtn.textContent = "Verify OTP";
+          } else {
+            formMessage.textContent = data.error || "OTP পাঠানো যায়নি";
+          }
+        } catch (error) {
+          formMessage.textContent = "সার্ভার সমস্যা হয়েছে";
+        } finally {
+          otpBtn.disabled = false;
+        }
+      } else if (!otpVerified) {
+        // Verify OTP
+        const otp = otpInput.value.trim();
+        if (!otp) {
+          formMessage.textContent = "অনুগ্রহ করে OTP দিন";
+          return;
+        }
+
+        try {
+          otpBtn.disabled = true;
+          const res = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp })
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            formMessage.style.color = "lightgreen";
+            formMessage.textContent = "OTP সফলভাবে যাচাই হয়েছে, এখন রেজিস্টার করুন।";
+            otpVerified = true;
+            setInputsEnabled(true);
+            // OTP ইনপুট আর পরিবর্তন করতে দেয়া হবে না, বাটনও disabled করে দিতে পারেন
+            otpInput.disabled = true;
+            otpBtn.disabled = true;
+          } else {
+            formMessage.textContent = data.error || "ভুল OTP";
+            formMessage.style.color = "orange";
+            otpVerified = false;
+          }
+        } catch (error) {
+          formMessage.textContent = "সার্ভার সমস্যা হয়েছে";
+          otpVerified = false;
+        } finally {
+          if (!otpVerified) otpBtn.disabled = false;
+        }
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!otpVerified) {
+        formMessage.textContent = "অনুগ্রহ করে প্রথমে OTP যাচাই করুন";
+        formMessage.style.color = "orange";
+        return;
+      }
+
+      const name = form.name.value.trim();
+      const age = form.age.value.trim();
+      const phone = form.phone.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value.trim();
+
+      formMessage.textContent = '';
+      formMessage.style.color = 'orange';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, age, phone, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          formMessage.style.color = 'lightgreen';
+          formMessage.textContent = data.message || 'রেজিস্ট্রেশন সফল হয়েছে';
+
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+        } else {
+          formMessage.textContent = data.error || data.message || 'রেজিস্ট্রেশন ব্যর্থ হয়েছে';
+        }
+      } catch (err) {
+        formMessage.textContent = 'সার্ভার এরর হয়েছে, পরে আবার চেষ্টা করুন';
+      }
+    });
+  </script>
+</body>
+</html>

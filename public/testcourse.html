@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>Polytechnic Express - কোর্স ডিটেইলস</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Plyr CSS -->
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      color: #212529;
+    }
+    .course-video-wrapper {
+      position: relative;
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+      margin-bottom: 1rem;
+    }
+    /* Prevent clicking directly on YouTube iframe */
+    .plyr__video-embed iframe {
+      pointer-events: none;
+    }
+    /* Transparent overlay */
+    .video-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: transparent;
+      z-index: 5;
+      pointer-events: none;
+    }
+    /* Custom control buttons */
+    .control-button {
+      position: absolute;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.85);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .control-button svg {
+      width: 20px;
+      height: 20px;
+      fill: #111;
+    }
+    /* Button positions */
+    .play-pause-btn {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .skip-backward {
+      top: 50%;
+      left: 10%;
+      transform: translate(-50%, -50%);
+    }
+    .skip-forward {
+      top: 50%;
+      right: 10%;
+      transform: translate(50%, -50%);
+    }
+    /* Show buttons on hover or fullscreen */
+    .course-video-wrapper:hover .control-button,
+    .course-video-wrapper.active .control-button,
+    body.plyr--fullscreen-active .control-button {
+      opacity: 1;
+    }
+
+    .chapter, .mentor-card {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .tab-btns .nav-link {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">🎓 Polytechnic Express</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link active" href="#">হোম</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">কোর্সসমূহ</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">যোগাযোগ</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">লগইন</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Video + Course Info -->
+  <div class="container my-5">
+    <div class="row align-items-stretch">
+      <!-- Video -->
+      <div class="col-md-8 mb-4 mb-md-0 d-flex flex-column">
+        <div class="course-video-wrapper" id="videoWrapper">
+          <div
+            id="player"
+            data-plyr-provider="youtube"
+            data-plyr-embed-id="9rV8YilBQZQ"
+          ></div>
+
+          <!-- Transparent overlay -->
+          <div class="video-overlay"></div>
+
+          <!-- Custom Controls -->
+          <button id="playPauseBtn" class="control-button play-pause-btn" aria-label="Play/Pause">
+            <svg id="playIcon" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" /> <!-- Play icon -->
+            </svg>
+          </button>
+          <button id="skipBackBtn" class="control-button skip-backward" title="Back 10s">
+            <svg viewBox="0 0 24 24"><path d="M11 8v8l-6-4zm1-6v2a9 9 0 1 1-9 9H1a11 11 0 1 0 11-11z"/></svg>
+          </button>
+          <button id="skipForwardBtn" class="control-button skip-forward" title="Forward 10s">
+            <svg viewBox="0 0 24 24"><path d="M13 8v8l6-4zm-1-6v2a9 9 0 1 0 9 9h-2a11 11 0 1 1-11-11z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Title & Button -->
+      <div class="col-md-4 d-flex flex-column justify-content-between text-center bg-white p-4 rounded shadow-sm">
+        <div class="my-auto">
+          <h2 class="mb-4">পলিটেকনিক ভর্তি প্রস্তুতি - পূর্ণাঙ্গ কোর্স</h2>
+        </div>
+        <div>
+          <button class="btn btn-success btn-lg w-100">কোর্সটি কিনুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Course Section -->
+  <div class="container my-5 p-4 bg-light rounded shadow-sm border">
+    <ul class="nav nav-pills justify-content-center flex-wrap gap-2 tab-btns" id="courseTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="content-tab" data-bs-toggle="pill" data-bs-target="#content" type="button" role="tab">
+          📚 কোর্স কন্টেন্ট
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="description-tab" data-bs-toggle="pill" data-bs-target="#description" type="button" role="tab">
+          📝 কোর্স বিবরণ
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="mentor-tab" data-bs-toggle="pill" data-bs-target="#mentor" type="button" role="tab">
+          👨‍🏫 মেন্টর
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content mt-4" id="courseTabContent">
+
+      <!-- Course Content -->
+      <div class="tab-pane fade show active" id="content" role="tabpanel">
+        <div class="accordion" id="courseAccordion">
+
+          <!-- Subject 1 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                গণিত
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#courseAccordion">
+              <div class="accordion-body">
+                <ul class="list-group list-group-flush">
+                  
+
+                  <a href="#" class="text-decoration-none text-dark fw-semibold" data-video-id="aZenmeRytEM">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      🎬 ভিডিও ১: পূর্ণ সংখ্যা
+                    <span class="badge bg-success">▶</span>
+                    </li>
+                  </a>
+
+
+                  <a href="#" class="text-decoration-none text-dark fw-semibold" data-video-id="aZenmeRytEM">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      🎬 ভিডিও 2: bhch
+                    <span class="badge bg-success">▶</span>
+                    </li>
+                  </a>
+
+
+                  <a href="#" class="text-decoration-none text-dark fw-semibold" data-video-id="aZenmeRytEM">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      🎬 ভিডিও 3: fghj
+                    <span class="badge bg-success">▶</span>
+                    </li>
+                  </a>
+
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subject 2 -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                  বিজ্ঞান
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#courseAccordion">
+              <div class="accordion-body">
+                <ul class="list-group list-group-flush">
+                  <a href="#" class="text-decoration-none text-dark fw-semibold">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      🎬 ভিডিও ১: শক্তির ধারণা
+                      <span class="badge bg-success">▶</span>
+                    </li>
+                  </a>
+
+
+                  <a href="#" class="text-decoration-none text-dark fw-semibold" data-video-id="aZenmeRytEM">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      🎬 ভিডিও ১: পূর্ণ সংখ্যা
+                    <span class="badge bg-success">▶</span>
+                    </li>
+                  </a>
+
+
+                  <a href="#" class="text-decoration-none text-dark fw-semibold">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                      🎬 ভিডিও ২: কর্মের সূত্র
+                      <span class="badge bg-success">▶</span>
+                    </li>
+                  </a>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Course Description -->
+      <div class="tab-pane fade" id="description" role="tabpanel">
+        <h3>কোর্সের বিবরণ</h3>
+        <p>
+          এই কোর্সটি পলিটেকনিক ভর্তি পরীক্ষার জন্য সম্পূর্ণ প্রস্তুতি দেয়। এতে গণিত, ভৌত বিজ্ঞান, রসায়ন ও ইংরেজি বিষয়ক গুরুত্বপূর্ণ অধ্যায় ও ভিডিও টিউটোরিয়াল অন্তর্ভুক্ত রয়েছে। প্রত্যেক চ্যাপ্টারে বিস্তারিত ব্যাখ্যা এবং উদাহরণ দেয়া হয়েছে।
+        </p>
+      </div>
+
+      <!-- Mentor Info -->
+      <div class="tab-pane fade" id="mentor" role="tabpanel">
+        <div class="mentor-card d-flex align-items-center gap-3">
+          <img src="https://via.placeholder.com/100" alt="Mentor Photo" class="rounded-circle" />
+          <div>
+            <h4>মোঃ আশিকুর রহমান</h4>
+            <p>অধ্যাপক, গণিত ও বিজ্ঞান</p>
+            <p>পলিটেকনিক ভর্তি পরীক্ষার অভিজ্ঞ প্রশিক্ষক।</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-4 mt-5">
+    <div class="container">
+      <p>© ২০২৫ Polytechnic Express | সকল অধিকার সংরক্ষিত</p>
+    </div>
+  </footer>
+
+  <!-- JS Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Plyr JS -->
+<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+
+<script>
+  // Plyr ইন্সট্যান্স তৈরি
+  const player = new Plyr('#player', {
+    youtube: {
+      noCookie: true,
+      modestbranding: 1,
+      rel: 0,
+      showinfo: 0
+    }
+  });
+
+  const videoWrapper = document.getElementById('videoWrapper');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const playIcon = document.getElementById('playIcon');
+  const skipBackBtn = document.getElementById('skipBackBtn');
+  const skipForwardBtn = document.getElementById('skipForwardBtn');
+
+  // Play/Pause Toggle
+  playPauseBtn.addEventListener('click', () => {
+    if (player.playing) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  });
+
+  // Change icon on play
+  player.on('play', () => {
+    playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause icon
+  });
+
+  // Change icon on pause
+  player.on('pause', () => {
+    playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; // Play icon
+  });
+
+  // Skip backward 10s
+  skipBackBtn.addEventListener('click', () => {
+    const currentTime = player.currentTime;
+    player.currentTime = Math.max(currentTime - 10, 0);
+  });
+
+  // Skip forward 10s
+  skipForwardBtn.addEventListener('click', () => {
+    const currentTime = player.currentTime;
+    player.currentTime = Math.min(currentTime + 10, player.duration);
+  });
+
+  // Optional: show controls on hover
+  videoWrapper.addEventListener('mouseenter', () => {
+    videoWrapper.classList.add('active');
+  });
+  videoWrapper.addEventListener('mouseleave', () => {
+    videoWrapper.classList.remove('active');
+  });
+
+  // Handle video change on click
+  document.querySelectorAll('[data-video-id]').forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const videoId = this.getAttribute('data-video-id');
+
+      if (videoId) {
+        // Load new video in Plyr
+        player.source = {
+          type: 'video',
+          sources: [
+            {
+              src: videoId,
+              provider: 'youtube'
+            }
+          ]
+        };
+
+        // Play the newly loaded video
+        player.play();
+      }
+    });
+  });
+</script>
+
+
+</body>
+</html>
+
+
