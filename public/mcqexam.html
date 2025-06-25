@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>MCQ পরীক্ষা</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    .question {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .question h3 {
+      margin-top: 0;
+    }
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 5px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background: #f0f0f0;
+      cursor: pointer;
+      text-align: left;
+    }
+    .options button.selected {
+      background-color: #d1e7dd;
+      border-color: #0f5132;
+    }
+    .options button.correct {
+      background-color: #d4edda !important;
+      border-color: #28a745 !important;
+      color: #155724;
+    }
+    .options button.wrong {
+      background-color: #f8d7da !important;
+      border-color: #dc3545 !important;
+      color: #721c24;
+    }
+    .submit-button {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      margin-top: 30px;
+    }
+    .result-boxes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .result-box {
+      background: #f1f1f1;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    .timer {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>MCQ পরীক্ষা</h2>
+    <div id="timer" class="timer">Loading...</div>
+    <div id="exam"></div>
+    <button class="submit-button" onclick="submitExam()">সাবমিট করুন</button>
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const subject = urlParams.get('subject');
+    const chapter = urlParams.get('chapter');
+    const timeLimit = parseInt(urlParams.get('time') || '30');
+    const totalMarks = parseInt(urlParams.get('mark') || '20');
+    const questionLimit = parseInt(urlParams.get('data-question') || '20');
+    const randomize = urlParams.get('random') === 'true';
+
+
+    let currentQuestions = [];
+    let answers = {};
+    let timerInterval;
+    let secondsLeft = timeLimit * 60;
+
+    function updateTimer() {
+      const minutes = Math.floor(secondsLeft / 60);
+      const seconds = secondsLeft % 60;
+      document.getElementById('timer').textContent = `⏰ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      if (secondsLeft <= 0) {
+        clearInterval(timerInterval);
+        submitExam();
+      } else {
+        secondsLeft--;
+      }
+    }
+
+function loadQuestions() {
+  fetch(`/api/mcq/by-chapter?subject=${subject}&chapter=${chapter}`)
+    .then(res => res.json())
+    .then(data => {
+      let selected = data;
+
+      if (randomize) {
+        // Shuffle function
+        for (let i = selected.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [selected[i], selected[j]] = [selected[j], selected[i]];
+        }
+      }
+
+      currentQuestions = selected.slice(0, questionLimit);
+      renderQuestions();
+    });
+}
+
+
+    function renderQuestions() {
+      const examDiv = document.getElementById('exam');
+      examDiv.innerHTML = '';
+      currentQuestions.forEach((q, index) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question';
+        qDiv.innerHTML = `
+          <h3>${index + 1}. ${q.qs}</h3>
+          <div class="options" id="options-${index}">
+            ${q.options.map((opt, i) => `
+              <button onclick="selectOption(${index}, ${i + 1})">${String.fromCharCode(97 + i)}. ${opt}</button>
+            `).join('')}
+          </div>
+        `;
+        examDiv.appendChild(qDiv);
+      });
+    }
+
+    function selectOption(qIndex, userOpt) {
+      answers[qIndex] = userOpt;
+      const optionButtons = document.querySelectorAll(`#options-${qIndex} button`);
+      optionButtons.forEach(btn => btn.classList.remove('selected'));
+      if (optionButtons[userOpt - 1]) {
+        optionButtons[userOpt - 1].classList.add('selected');
+      }
+    }
+
+    function submitExam() {
+  clearInterval(timerInterval);
+  let attempted = 0, correct = 0, wrong = 0, skipped = 0;
+
+  currentQuestions.forEach((q, i) => {
+    const correctIndex = q.ans - 1;
+    const selectedIndex = answers[i] !== undefined ? answers[i] - 1 : null;
+
+    const optionButtons = document.querySelectorAll(`#options-${i} button`);
+    optionButtons.forEach((btn, idx) => {
+      btn.disabled = true;
+      btn.classList.remove('selected');
+
+      if (idx === correctIndex) {
+        btn.style.backgroundColor = '#d1e7dd'; // green
+        btn.style.borderColor = '#0f5132';
+      }
+
+      if (selectedIndex === idx && selectedIndex !== correctIndex) {
+        btn.style.backgroundColor = '#f8d7da'; // red
+        btn.style.borderColor = '#842029';
+      }
+    });
+
+    if (selectedIndex !== null) {
+      attempted++;
+      if (selectedIndex === correctIndex) correct++;
+      else wrong++;
+    } else {
+      skipped++;
+    }
+  });
+
+  const positiveMarks = correct * (totalMarks / questionLimit);
+  const percentage = (positiveMarks / totalMarks) * 100;
+  const status = percentage >= 33 ? 'Pass' : 'Fail';
+  const timeUsed = timeLimit * 60 - secondsLeft;
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('result').innerHTML = `
+    <h3>Exam Result</h3>
+    <div class="result-boxes">
+      <div class="result-box">Time Taken<br><strong>${formatTime(timeUsed)}</strong></div>
+      <div class="result-box">Total Questions<br><strong>${questionLimit}</strong></div>
+      <div class="result-box">Attempted<br><strong>${attempted}</strong></div>
+      <div class="result-box">Skipped<br><strong>${skipped}</strong></div>
+      <div class="result-box">Correct<br><strong>${correct}</strong></div>
+      <div class="result-box">Wrong<br><strong>${wrong}</strong></div>
+      <div class="result-box">Positive Marks<br><strong>${positiveMarks}</strong></div>
+      <div class="result-box">Obtained Marks<br><strong>${positiveMarks}</strong></div>
+      <div class="result-box">Percentage<br><strong>${percentage.toFixed(2)}%</strong></div>
+      <div class="result-box">Status<br><strong>${status}</strong></div>
+    </div>
+  `;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+    function formatTime(sec) {
+      const min = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${min.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    window.onload = () => {
+      loadQuestions();
+      timerInterval = setInterval(updateTimer, 1000);
+      updateTimer();
+    }
+  </script>
+</body>
+</html>

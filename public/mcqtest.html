@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>MCQ কোর্স</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@100..800&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
@@ -105,6 +105,38 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .start-button.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    #paymentSection {
+      display: none;
+      margin-top: 1rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    #paymentSection input,
+    #paymentSection select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    #paymentMessage {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
     }
 
     @media screen and (max-width: 768px) {
@@ -123,34 +155,60 @@
 </head>
 <body>
   <div class="container">
-    <!-- Course Info -->
     <div class="course-info">
       <h1>MCQ কোর্স: ভর্তি প্রস্তুতি</h1>
       <p>মূল্য: ৪৯৯ টাকা</p>
       <p>এই কোর্সে থাকছে সকল বিষয়ের অধ্যায়ভিত্তিক MCQ অনুশীলন ও পরীক্ষার সুবিধা।</p>
-      <button class="buy-button">কোর্সটি কিনুন</button>
+      <button class="buy-button" onclick="handleBuyNow()">কোর্সটি কিনুন</button>
+
+      <div id="paymentSection">
+        <h3>পেমেন্ট করুন</h3>
+        <p>বিকাশ বা নগদ নম্বরে ৪৯৯ টাকা পাঠিয়ে নিচের ফর্মটি পূরণ করুন।</p>
+        <select id="method" onchange="updateInstructions()">
+          <option value="bkash">বিকাশ</option>
+          <option value="nagad">নগদ</option>
+        </select>
+        <div id="instructions" style="margin: 5px 0; font-size: 14px; color: #333;"></div>
+        <input type="text" id="phone" placeholder="আপনার নম্বর" />
+        <input type="text" id="trxid" placeholder="লেনদেন নম্বর (TrxID)" />
+        <button onclick="submitPayment()" class="buy-button">পেমেন্ট সাবমিট করুন</button>
+        <div id="paymentMessage"></div>
+      </div>
     </div>
 
-    <!-- Layout -->
     <div class="layout">
-      <!-- Sidebar with subjects -->
       <div class="sidebar">
         <div class="subject-group">
           <button class="subject-toggle">গণিত</button>
           <div class="test-list">
-            <button onclick="showTestDetails('গণিত মডেল টেস্ট ১')">Model Test 1</button>
-            <button onclick="showTestDetails('গণিত মডেল টেস্ট ২')">Model Test 2</button>
+            <!-- এখানে data-অ্যাট্রিবিউট দিয়ে সাবজেক্ট, চ্যাপ্টার, সময়, মার্কস পাঠানো -->
+            <button onclick="showTestDetails(this)" 
+              data-subject="math" 
+              data-chapter="math-1" 
+              data-time="30" 
+              data-question="30"
+              data-mark="30">Model Test 1</button>
+            <button onclick="showTestDetails(this)" 
+              data-subject="গণিত" 
+              data-chapter="মডেল টেস্ট ২" 
+              data-time="৩০" 
+              data-question="20"
+              data-mark="২৫">Model Test 2</button>
+    
           </div>
         </div>
         <div class="subject-group">
           <button class="subject-toggle">পদার্থ</button>
           <div class="test-list">
-            <button onclick="showTestDetails('পদার্থ মডেল টেস্ট ১')">Model Test 1</button>
+            <button onclick="showTestDetails(this)" 
+              data-subject="পদার্থ" 
+              data-chapter="মডেল টেস্ট ১" 
+              data-time="৩০" 
+              data-mark="২৫">Model Test 1</button>
           </div>
         </div>
       </div>
 
-      <!-- Test details area -->
       <div class="test-details" id="testDetails">
         <h2>টেস্ট সিলেক্ট করুন</h2>
         <p>আপনি যেকোনো একটি মডেল টেস্ট বেছে নিন।</p>
@@ -159,7 +217,7 @@
   </div>
 
   <script>
-    // Accordion behavior
+    // সাবজেক্ট টগল করবো
     document.querySelectorAll('.subject-toggle').forEach(button => {
       button.addEventListener('click', () => {
         document.querySelectorAll('.test-list').forEach(list => {
@@ -167,22 +225,174 @@
             list.style.display = 'none';
           }
         });
-
         const panel = button.nextElementSibling;
         panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
       });
     });
 
-    // Show test details on click
-    function showTestDetails(testName) {
+    // টেস্টের ডিটেইলস দেখানোর ফাংশন, যেটা বাটনের data-অ্যাট্রিবিউট থেকে ডেটা নেয়
+    function showTestDetails(button) {
+      const subject = button.getAttribute('data-subject');
+      const chapter = button.getAttribute('data-chapter');
+      const time = button.getAttribute('data-time');
+      const mark = button.getAttribute('data-mark');
+      const question = button.getAttribute('data-question'); // প্রশ্নের সংখ্যা, যদি দরকার হয়
+      const user = JSON.parse(localStorage.getItem('user'));
       const testDetails = document.getElementById('testDetails');
+
       testDetails.innerHTML = `
-        <h2>${testName}</h2>
-        <p>এই পরীক্ষায় থাকবে ২৫টি প্রশ্ন। সময়: ৩০ মিনিট। সঠিক উত্তর প্রতি ১ নম্বর।</p>
-        <button class="start-button">🟢 টেস্ট শুরু করুন</button>
+        <h2>${subject} - ${chapter}</h2>
+        <p>এই পরীক্ষায় থাকবে ${mark}টি প্রশ্ন। সময়: ${time} মিনিট। সঠিক উত্তর প্রতি ১ নম্বর।</p>
+        <a href="mcqexam.html?subject=${encodeURIComponent(subject)}&chapter=${encodeURIComponent(chapter)}&time=${time}&mark=${mark}&data-question=${question}&random=true" 
+           id="startTestBtn" 
+           class="start-button disabled"
+           >🟢 টেস্ট শুরু করুন</a>
+        <div id="startMessage" style="margin-top: 10px; font-weight: bold;"></div>
       `;
+
       window.scrollTo({ top: testDetails.offsetTop - 30, behavior: 'smooth' });
+
+      checkTestAccess(user);
     }
+
+    // পেমেন্ট চেক করে টেস্ট শুরু লিংক সক্রিয় বা নিষ্ক্রিয় করবে
+    async function checkTestAccess(user) {
+      const btn = document.getElementById('startTestBtn');
+      const msg = document.getElementById('startMessage');
+
+      if (!user) {
+        msg.textContent = "⚠️ অনুগ্রহ করে লগইন করুন টেস্ট শুরু করার জন্য।";
+        btn.classList.add('disabled');
+        btn.removeAttribute('href');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/payments/all');
+        const payments = await res.json();
+
+        const match = payments.find(p =>
+          p.phone === user.phone &&
+          p.courseId === 'mcq_course' &&
+          p.status === 'approved'
+        );
+
+        if (match) {
+          msg.textContent = "✅ আপনি টেস্ট শুরু করতে পারবেন।";
+          btn.classList.remove('disabled');
+          // href থাকবে, তাই লিংক সক্রিয় থাকবে
+        } else {
+          msg.textContent = "⛔ পেমেন্ট এখনো যাচাই হয়নি বা অ্যাপ্রুভ করা হয়নি।";
+          btn.classList.add('disabled');
+          btn.removeAttribute('href');
+        }
+      } catch (err) {
+        msg.textContent = "❌ পেমেন্ট যাচাই করতে সমস্যা হয়েছে।";
+        btn.classList.add('disabled');
+        btn.removeAttribute('href');
+      }
+    }
+
+    function handleBuyNow() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user) {
+        alert("আপনাকে আগে লগইন করতে হবে।");
+        return;
+      }
+      const section = document.getElementById('paymentSection');
+      section.style.display = (section.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function updateInstructions() {
+      const method = document.getElementById('method').value;
+      const instructions = document.getElementById('instructions');
+      instructions.textContent = method === 'bkash'
+        ? 'বিকাশ পার্সোনাল নম্বরে Send Money করুন: 01XXXXXXXXX'
+        : 'নগদ পার্সোনাল নম্বরে Send Money করুন: 01YYYYYYYYY';
+    }
+
+    async function submitPayment() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const method = document.getElementById('method').value;
+      const phone = document.getElementById('phone').value.trim();
+      const trxid = document.getElementById('trxid').value.trim();
+      const messageEl = document.getElementById('paymentMessage');
+
+      if (!method || !phone || !trxid) {
+        messageEl.textContent = "সব ফিল্ড পূরণ করুন।";
+        messageEl.style.color = 'red';
+        return;
+      }
+
+      if (!/^01[0-9]{9}$/.test(phone)) {
+        messageEl.style.color = 'red';
+        messageEl.textContent = "সঠিক ১১ সংখ্যার ফোন নম্বর দিন।";
+        return;
+      }
+
+      const payload = {
+        courseId: 'mcq_course price_499',
+        name: user.name,
+        phone: user.phone,
+        email: user.email || '',
+        paymentMethod: method,
+        paymentPhone: phone,
+        transactionId: trxid
+      };
+
+      try {
+        const res = await fetch('/api/payments/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          messageEl.style.color = 'green';
+          messageEl.textContent = '✅ পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে। যাচাই করা হচ্ছে...';
+          document.getElementById('paymentSection').style.display = 'none';
+        } else {
+          messageEl.style.color = 'red';
+          messageEl.textContent = data.error || '❌ পেমেন্ট ব্যর্থ হয়েছে।';
+        }
+      } catch (err) {
+        messageEl.style.color = 'red';
+        messageEl.textContent = '❌ সার্ভারের সাথে সংযোগ ব্যর্থ।';
+      }
+    }
+
+    async function checkBuyButtonStatus() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const buyBtn = document.querySelector('.buy-button');
+
+      if (!user) return;
+
+      try {
+        const res = await fetch('/api/payments/all');
+        const payments = await res.json();
+
+        const match = payments.find(p =>
+          p.phone === user.phone &&
+          p.courseId === 'mcq_course' &&
+          p.status === 'approved'
+        );
+
+        if (match) {
+          buyBtn.textContent = "কোর্সটি শুরু করুন";
+          buyBtn.onclick = () => {
+            window.location.href = "#"; // কোর্স কন্টেন্ট পেইজের URL এখানে বসাও
+          };
+        }
+      } catch (err) {
+        console.error("পেমেন্ট যাচাই সমস্যা:", err);
+      }
+    }
+
+    window.onload = () => {
+      updateInstructions();
+      checkBuyButtonStatus();
+    };
   </script>
 </body>
 </html>

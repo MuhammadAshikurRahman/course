@@ -105,4 +105,22 @@ router.delete('/delete/:id', async (req, res) => {
 
 
 
+// উদাহরণ Express API রুট
+// ✅ সঠিকভাবে router ব্যবহার করা হচ্ছে
+router.get('/questions', async (req, res) => {
+  const { subject, chapter, limit } = req.query;
+  const limitNum = parseInt(limit) || 20;
+
+  try {
+    const questions = await Mcq.find({ subject, chapter }).limit(limitNum);
+    res.json(questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'প্রশ্ন আনতে সমস্যা হয়েছে' });
+  }
+});
+
+
+
+
 module.exports = router;
